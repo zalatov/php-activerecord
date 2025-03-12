@@ -13,9 +13,6 @@ use PDO;
  */
 class SqliteAdapter extends Connection
 {
-
-	static $datetime_format = 'Y-m-d H:i:s';
-
 	protected function __construct($info)
 	{
 		if (!file_exists($info->host))

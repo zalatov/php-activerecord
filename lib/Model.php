@@ -456,7 +456,7 @@ class Model
 
 		// convert php's \DateTime to ours
 		if ($value instanceof \DateTime)
-			$value = new DateTime($value->format('Y-m-d H:i:s'));
+			$value = new DateTime($value->format(Connection::$datetime_format));
 
 		// make sure DateTime values know what model they belong to so
 		// dirty stuff works when calling set methods on the DateTime object
@@ -1120,7 +1120,7 @@ class Model
 	 */
 	public function set_timestamps()
 	{
-		$now = date('Y-m-d H:i:s');
+		$now = date(Connection::$datetime_format);
 
 		if (isset($this->updated_at))
 			$this->updated_at = $now;
