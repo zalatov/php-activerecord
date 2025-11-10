@@ -125,8 +125,7 @@ class Expressions
         $sql    = [];
         $params = [];
 
-        foreach ($expressions as $name => $value)
-        {
+        foreach ($expressions as $name => $value) {
             if (str_ends_with($name, '>=') || str_ends_with($name, '<=') || str_ends_with($name, '!=')) {
                 $column   = trim(substr($name, 0, -2));
                 $operand  = substr($name, -2) . '?';
@@ -136,9 +135,25 @@ class Expressions
                 $operand  = substr($name, -1) . '?';
                 $params[] = $value;
             } elseif (is_array($value)) {
-                $column  = $name;
-                $operand = 'in (' . implode(',', array_fill(0, count($value), '?')) . ')';
-                $params  = array_merge($params, array_values($value));
+                if (str_ends_with($name, 'not')) {
+                    if (0 === count($value)) {
+                        $column  = null;
+                        $operand = '1 = 1';
+                    } else {
+                        $column  = trim(substr($name, 0, -3));
+                        $operand = 'not in (' . implode(',', array_fill(0, count($value), '?')) . ')';
+                        $params  = array_merge($params, array_values($value));
+                    }
+                } else {
+                    if (0 === count($value)) {
+                        $column  = null;
+                        $operand = '1 = 0';
+                    } else {
+                        $column  = $name;
+                        $operand = 'in (' . implode(',', array_fill(0, count($value), '?')) . ')';
+                        $params  = array_merge($params, array_values($value));
+                    }
+                }
             } elseif (null === $value) {
                 if (str_ends_with($name, 'not')) {
                     $column  = trim(substr($name, 0, -3));
@@ -153,11 +168,13 @@ class Expressions
                 $params[] = $value;
             }
 
-            if ($this->connection) {
-                $column = $this->connection->quote_name($column);
+            if (null !== $column) {
+                if ($this->connection) {
+                    $column = $this->connection->quote_name($column);
+                }
             }
 
-            $sql[] = $column . ' ' . $operand;
+            $sql[] = trim($column . ' ' . $operand);
         }
 
         return array(implode(' and ', $sql), array_values($params));
